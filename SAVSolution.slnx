@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="SAV.API/SAV.API.csproj" />
+  <Project Path="SAV.Application/SAV.Application.csproj" />
+  <Project Path="SAV.Domain/SAV.Domain.csproj" />
+  <Project Path="SAV.Infrastructure/SAV.Infrastructure.csproj" />
+  <Project Path="SAV.Shared/SAV.Shared.csproj" />
+  <!-- <Project Path="SAV.WebUI/SAV.WebUI.csproj" /> -->
+</Solution>

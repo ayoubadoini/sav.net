@@ -1,0 +1,126 @@
+@page
+@model SAV.WebUI.Pages.Auth.LoginModel
+@{
+    ViewData["Title"] = "Connexion";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SAV Manager</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .login-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .login-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .login-header p {
+            color: #666;
+            font-size: 14px;
+        }
+        .form-control {
+            height: 44px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .btn-login {
+            height: 44px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .btn-login:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #6a3f94 100%);
+            color: white;
+        }
+        .signup-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        .signup-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+        .alert {
+            border-radius: 8px;
+            border: none;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>🔐 SAV Manager</h1>
+            <p>Gestion complète des services après-vente</p>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-danger" role="alert">
+                <i class="bi bi-exclamation-circle"></i> @Model.ErrorMessage
+            </div>
+        }
+
+        <form method="post">
+            <div class="mb-3">
+                <label for="Email" class="form-label fw-500">Email</label>
+                <input type="email" class="form-control" id="Email" name="Input.Email" 
+                       placeholder="votre@email.com" required asp-for="Input.Email">
+            </div>
+
+            <div class="mb-3">
+                <label for="Password" class="form-label fw-500">Mot de passe</label>
+                <input type="password" class="form-control" id="Password" name="Input.Password" 
+                       placeholder="Entrez votre mot de passe" required asp-for="Input.Password">
+            </div>
+
+            <button type="submit" class="btn btn-login w-100 text-white mb-3">Connexion</button>
+        </form>
+
+        <div class="signup-link">
+            Pas encore inscrit ? <a href="/Auth/Register">Créer un compte</a>
+        </div>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

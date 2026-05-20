@@ -1,0 +1,69 @@
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                                      ┃
+┃               SAV MANAGER API - ADMIN LOGIN CARD                    ┃
+┃                                                                      ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                      ┃
+┃   📧 EMAIL:     admin@savmanager.com                               ┃
+┃   🔑 PASSWORD:  Admin@123456                                       ┃
+┃   👤 NAME:      System Administrator                              ┃
+┃   👑 ROLE:      Admin                                              ┃
+┃                                                                      ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃  HOW TO USE                                                         ┃
+├────────────────────────────────────────────────────────────────────┤
+┃                                                                      ┃
+┃  1. Start API:                                                       ┃
+┃     $ cd SAV.API                                                     ┃
+┃     $ dotnet run                                                     ┃
+┃                                                                      ┃
+┃  2. Wait for:                                                        ┃
+┃     ✅ Default admin account created successfully.                 ┃
+┃                                                                      ┃
+┃  3. Open Swagger:                                                    ┃
+┃     https://localhost:5001/swagger                                  ┃
+┃                                                                      ┃
+┃  4. Login with credentials above                                    ┃
+┃                                                                      ┃
+┃  5. Copy the accessToken and use for other endpoints               ┃
+┃                                                                      ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃  AVAILABLE ENDPOINTS                                                ┃
+├────────────────────────────────────────────────────────────────────┤
+┃  POST /api/auth/login              → Get access token              ┃
+┃  POST /api/auth/register           → Register new user            ┃
+┃  POST /api/auth/refresh-token      → Refresh expired token        ┃
+┃  POST /api/auth/logout             → Logout                        ┃
+┃  POST /api/auth/create-admin       → Create new admin             ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃  STATUS                                                             ┃
+├────────────────────────────────────────────────────────────────────┤
+┃  Build:           ✅ SUCCESSFUL                                    ┃
+┃  Errors:          0                                                ┃
+┃  Warnings:        0                                                ┃
+┃  Ready to Use:    ✅ YES                                           ┃
+┃  Auto-Seeded:     ✅ YES                                           ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃  DOCUMENTATION                                                       ┃
+├────────────────────────────────────────────────────────────────────┤
+┃  📄 00_START_HERE.md              ← Read this first!              ┃
+┃  📄 MASTER_SUMMARY.md              ← Complete overview            ┃
+┃  📄 QUICK_REFERENCE.txt            ← One-page guide              ┃
+┃  🔧 start-api.ps1                  ← PowerShell launcher         ┃
+┃  📋 SAV-Manager-Auth-API.postman_collection.json                 ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+					TEST IMMEDIATELY WITH CURL
+
+curl -X POST "https://localhost:5001/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{
+	"email": "admin@savmanager.com",
+	"password": "Admin@123456"
+  }'
+
+┌──────────────────────────────────────────────────────────────────────┐
+│                                                                      │
+│        Everything is ready! Just run 'dotnet run' and enjoy! 🚀    │
+│                                                                      │
+└──────────────────────────────────────────────────────────────────────┘

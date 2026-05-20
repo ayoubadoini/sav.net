@@ -1,0 +1,150 @@
+﻿@page
+@model IndexModel
+@using SAV.WebUI.Models
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 fw-bold text-dark">Dashboard SAV</h1>
+            <p class="text-muted">Bienvenue dans votre système de gestion SAV</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="/Complaints" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nouvelle Réclamation
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    @if (Model.Stats != null)
+    {
+        <div class="row g-3 mb-4">
+            <!-- Total Complaints -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <p class="text-muted mb-1 small">Total Réclamations</p>
+                                <h3 class="fw-bold text-primary mb-0">@Model.Stats.TotalComplaints</h3>
+                            </div>
+                            <div class="bg-primary bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-exclamation-circle text-primary fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Complaints -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <p class="text-muted mb-1 small">En Attente</p>
+                                <h3 class="fw-bold text-warning mb-0">@Model.Stats.PendingComplaints</h3>
+                            </div>
+                            <div class="bg-warning bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-hourglass-split text-warning fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Completed Complaints -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <p class="text-muted mb-1 small">Résolues</p>
+                                <h3 class="fw-bold text-success mb-0">@Model.Stats.CompletedComplaints</h3>
+                            </div>
+                            <div class="bg-success bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-check-circle text-success fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Interventions -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <p class="text-muted mb-1 small">Interventions</p>
+                                <h3 class="fw-bold text-info mb-0">@Model.Stats.TotalInterventions</h3>
+                            </div>
+                            <div class="bg-info bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-tools text-info fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> Erreur lors du chargement des statistiques
+        </div>
+    }
+
+    <!-- Quick Actions -->
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-3">
+                        <i class="bi bi-list-ul text-primary"></i> Actions Rapides
+                    </h5>
+                    <div class="d-grid gap-2">
+                        <a href="/Complaints" class="btn btn-outline-primary text-start">
+                            📋 Gérer les Réclamations
+                        </a>
+                        <a href="/Interventions" class="btn btn-outline-primary text-start">
+                            🔧 Gérer les Interventions
+                        </a>
+                        <a href="/Invoices" class="btn btn-outline-primary text-start">
+                            💼 Gérer les Factures
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-3">
+                        <i class="bi bi-info-circle text-info"></i> À Propos
+                    </h5>
+                    <p class="text-muted">
+                        Bienvenue dans <strong>SAV Manager</strong>, votre plateforme de gestion complète pour les services après-vente.
+                    </p>
+                    <p class="text-muted small mb-0">
+                        Version 1.0 | .NET 10 | Razor Pages
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+</style>

@@ -6,6 +6,7 @@ using MediatR;
 using System.Text;
 using System.Linq;
 using System.Threading.Tasks;
+using SAV.Infrastructure;
 using SAV.Infrastructure.Persistence;
 using SAV.Infrastructure.Identity;
 using SAV.Infrastructure.Repositories;
@@ -136,7 +137,7 @@ builder.Services.AddAuthorization(options =>
 // REPOSITORIES & UNIT OF WORK
 // ============================================================
 
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddInfrastructure();
 
 // ============================================================
 // MEDIATOR CONFIGURATION

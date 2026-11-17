@@ -77,15 +77,43 @@ public class AuthenticationService : IAuthenticationService
             IsActive = true
         };
 
-        var result = await _userManager.CreateAsync(user, registerRequest.Password);
-        if (!result.Succeeded)
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+            var result = await _userManager.CreateAsync(user, registerRequest.Password);
+            if (!result.Succeeded)
+                return false;
+
+            if (!await _roleManager.RoleExistsAsync(roleName))
+                await _roleManager.CreateAsync(new IdentityRole<int> { Name = roleName });
+
+            await _userManager.AddToRoleAsync(user, roleName);
+
+            // If the registered user is a client, create a Client profile linked to the user
+            if (string.Equals(roleName, "Client", StringComparison.OrdinalIgnoreCase))
+            {
+                var client = new Client
+                {
+                    UserId = user.Id,
+                    Address = string.Empty,
+                    Phone = string.Empty
+                };
+
+                _context.Clients.Add(client);
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Client profile created for user {Email} with ClientId {ClientId}", registerRequest.Email, client.Id);
+            }
+
+            await transaction.CommitAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            _logger.LogError(ex, "Failed to register user {Email} and create linked Client profile", registerRequest.Email);
             return false;
-
-        if (!await _roleManager.RoleExistsAsync(roleName))
-            await _roleManager.CreateAsync(new IdentityRole<int> { Name = roleName });
-
-        await _userManager.AddToRoleAsync(user, roleName);
-        return true;
+        }
     }
 
     public async Task<object?> RefreshTokenAsync(string refreshToken)

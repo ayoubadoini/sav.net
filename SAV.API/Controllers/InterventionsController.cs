@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SAV.Application.Interfaces.Services;
 using SAV.Domain.Entities;
 using SAV.Domain.Enums;
 using SAV.Infrastructure.Repositories;
@@ -14,10 +15,12 @@ namespace SAV.API.Controllers;
 public class InterventionsController : ControllerBase
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IPdfService _pdfService;
 
-    public InterventionsController(IUnitOfWork unitOfWork)
+    public InterventionsController(IUnitOfWork unitOfWork, IPdfService pdfService)
     {
         _unitOfWork = unitOfWork;
+        _pdfService = pdfService;
     }
 
     [HttpGet]
@@ -88,6 +91,47 @@ public class InterventionsController : ControllerBase
         }
 
         return Ok(MapToDto(intervention));
+    }
+
+    /// <summary>
+    /// Downloads technical intervention as PDF file
+    /// </summary>
+    /// <remarks>
+    /// Returns a professional PDF with intervention details, technician info, and labor costs
+    /// </remarks>
+    [HttpGet("{id}/pdf")]
+    public async Task<ActionResult> DownloadInterventionPdf(int id)
+    {
+        try
+        {
+            var intervention = await _unitOfWork.Interventions
+                .GetQueryable()
+                .AsNoTracking()
+                .Where(item => !item.IsDeleted && item.Id == id)
+                .Include(item => item.Complaint)
+                    .ThenInclude(complaint => complaint.Client)
+                        .ThenInclude(client => client.User)
+                .Include(item => item.Technician)
+                .FirstOrDefaultAsync();
+
+            if (intervention == null)
+            {
+                return NotFound(new { message = "Technical intervention not found" });
+            }
+
+            var pdfBytes = await _pdfService.GenerateInterventionPdfAsync(intervention);
+            var fileName = $"Intervention-{intervention.Id}.pdf";
+
+            return File(pdfBytes, "application/pdf", fileName);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(500, new { message = "Error generating PDF", error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An unexpected error occurred", error = ex.Message });
+        }
     }
 
     [HttpPost]

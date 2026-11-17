@@ -13,10 +13,12 @@ namespace SAV.API.Controllers;
 public class ClientsController : ControllerBase
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly SAV.Shared.Interfaces.ICurrentUserService _currentUserService;
 
-    public ClientsController(IUnitOfWork unitOfWork)
+    public ClientsController(IUnitOfWork unitOfWork, SAV.Shared.Interfaces.ICurrentUserService currentUserService)
     {
         _unitOfWork = unitOfWork;
+        _currentUserService = currentUserService;
     }
 
     [HttpGet]
@@ -32,7 +34,7 @@ public class ClientsController : ControllerBase
         return Ok(clients.Select(MapToDto));
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public async Task<ActionResult> GetById(int id)
     {
         var client = await _unitOfWork.Clients
@@ -46,6 +48,26 @@ public class ClientsController : ControllerBase
         {
             return NotFound();
         }
+
+        return Ok(MapToDto(client));
+    }
+
+    [HttpGet("me")]
+    public async Task<ActionResult> GetCurrent()
+    {
+        var userId = _currentUserService.GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized();
+
+        var client = await _unitOfWork.Clients
+            .GetQueryable()
+            .AsNoTracking()
+            .Where(item => !item.IsDeleted && item.UserId == userId.Value)
+            .Include(item => item.User)
+            .FirstOrDefaultAsync();
+
+        if (client == null)
+            return NotFound();
 
         return Ok(MapToDto(client));
     }

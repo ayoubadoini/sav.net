@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SAV.Application.Interfaces.Services;
 using SAV.Domain.Entities;
 using SAV.Domain.Enums;
 using SAV.Infrastructure.Repositories;
@@ -16,11 +17,13 @@ public class ComplaintsController : ControllerBase
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IPdfService _pdfService;
 
-    public ComplaintsController(IUnitOfWork unitOfWork, ICurrentUserService currentUserService)
+    public ComplaintsController(IUnitOfWork unitOfWork, ICurrentUserService currentUserService, IPdfService pdfService)
     {
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
+        _pdfService = pdfService;
     }
 
     [HttpGet]
@@ -82,6 +85,39 @@ public class ComplaintsController : ControllerBase
         }
 
         return Ok(MapToDto(complaint));
+    }
+
+    [HttpGet("{id}/pdf")]
+    public async Task<ActionResult> DownloadComplaintPdf(int id)
+    {
+        var complaint = await _unitOfWork.Complaints
+            .GetQueryable()
+            .AsNoTracking()
+            .Where(item => !item.IsDeleted && item.Id == id)
+            .Include(item => item.Client)
+                .ThenInclude(client => client.User)
+            .Include(item => item.Article)
+            .Include(item => item.Interventions)
+                .ThenInclude(intervention => intervention.Technician)
+            .FirstOrDefaultAsync();
+
+        if (complaint == null)
+        {
+            return NotFound();
+        }
+
+        if (_currentUserService.IsClient())
+        {
+            var currentClient = await GetCurrentClientAsync();
+            if (currentClient == null || complaint.ClientId != currentClient.Id)
+            {
+                return Forbid();
+            }
+        }
+
+        var pdfBytes = await _pdfService.GenerateComplaintPdfAsync(complaint);
+        var fileName = $"Complaint-{complaint.Id}.pdf";
+        return File(pdfBytes, "application/pdf", fileName);
     }
 
     [HttpPost]
@@ -278,6 +314,24 @@ public class ComplaintsController : ControllerBase
         await _unitOfWork.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    [HttpGet("by-article/{articleId}")]
+    public async Task<ActionResult> GetByArticle(int articleId)
+    {
+        var complaints = await _unitOfWork.Complaints
+            .GetQueryable()
+            .AsNoTracking()
+            .Where(item => !item.IsDeleted && item.ArticleId == articleId)
+            .Include(item => item.Client)
+                .ThenInclude(c => c.User)
+            .Include(item => item.Article)
+            .Include(item => item.Interventions)
+                .ThenInclude(intervention => intervention.Technician)
+            .OrderByDescending(c => c.CreatedDate)
+            .ToListAsync();
+
+        return Ok(complaints.Select(MapToDto));
     }
 
     private async Task<Client?> GetCurrentClientAsync()

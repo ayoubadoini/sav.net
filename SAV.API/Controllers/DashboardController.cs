@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SAV.Application.Interfaces.Services;
 using SAV.Domain.Enums;
 using SAV.Infrastructure.Repositories;
 
@@ -12,10 +13,12 @@ namespace SAV.API.Controllers;
 public class DashboardController : ControllerBase
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IPdfService _pdfService;
 
-    public DashboardController(IUnitOfWork unitOfWork)
+    public DashboardController(IUnitOfWork unitOfWork, IPdfService pdfService)
     {
         _unitOfWork = unitOfWork;
+        _pdfService = pdfService;
     }
 
     [HttpGet("stats")]
@@ -136,6 +139,101 @@ public class DashboardController : ControllerBase
             .ToListAsync();
 
         return Ok(chart);
+    }
+
+    /// <summary>
+    /// Exports dashboard statistics as PDF file
+    /// </summary>
+    /// <remarks>
+    /// Returns a professional PDF with KPIs, interventions summary, technician performance, and revenue analytics
+    /// </remarks>
+    [HttpGet("export/pdf")]
+    public async Task<ActionResult> ExportDashboardPdf()
+    {
+        try
+        {
+            // Gather all dashboard data
+            var totalComplaints = await _unitOfWork.Complaints.GetQueryable().CountAsync(c => !c.IsDeleted);
+            var resolvedComplaints = await _unitOfWork.Complaints.GetQueryable()
+                .CountAsync(c => !c.IsDeleted && c.Status == ComplaintStatus.Resolved);
+            var pendingComplaints = await _unitOfWork.Complaints.GetQueryable()
+                .CountAsync(c => !c.IsDeleted && c.Status == ComplaintStatus.Pending);
+
+            var totalRevenue = await _unitOfWork.Invoices.GetQueryable()
+                .Where(i => i.IsPaid)
+                .SumAsync(i => (decimal?)i.TotalAmount) ?? 0m;
+
+            var totalInterventions = await _unitOfWork.Interventions.GetQueryable()
+                .CountAsync(i => !i.IsDeleted);
+            var completedInterventions = await _unitOfWork.Interventions.GetQueryable()
+                .CountAsync(i => !i.IsDeleted && i.Status == InterventionStatus.Completed);
+            var avgInterventionCost = totalInterventions > 0
+                ? await _unitOfWork.Interventions.GetQueryable()
+                    .Where(i => !i.IsDeleted)
+                    .AverageAsync(i => (decimal?)i.LaborCost) ?? 0m
+                : 0m;
+
+            var totalInvoices = await _unitOfWork.Invoices.GetQueryable()
+                .CountAsync(i => !i.IsDeleted);
+            var paidInvoices = await _unitOfWork.Invoices.GetQueryable()
+                .CountAsync(i => !i.IsDeleted && i.IsPaid);
+            var outstandingAmount = await _unitOfWork.Invoices.GetQueryable()
+                .Where(i => !i.IsDeleted && !i.IsPaid)
+                .SumAsync(i => (decimal?)i.TotalAmount) ?? 0m;
+
+            // Technician performance
+            var technicianStats = await _unitOfWork.Interventions.GetQueryable()
+                .Where(i => !i.IsDeleted && i.TechnicianId != null)
+                .GroupBy(i => i.TechnicianId)
+                .Select(g => new
+                {
+                    TechnicianId = g.Key,
+                    CompletedCount = g.Count(i => i.Status == InterventionStatus.Completed),
+                    Revenue = g.Sum(i => i.LaborCost)
+                })
+                .Join(
+                    _unitOfWork.Technicians.GetQueryable(),
+                    item => item.TechnicianId,
+                    tech => tech.Id,
+                    (item, tech) => new TechnicianPerformanceDto
+                    {
+                        TechnicianId = tech.Id,
+                        FullName = tech.FullName,
+                        CompletedInterventions = item.CompletedCount,
+                        TotalRevenue = item.Revenue,
+                        Specialization = tech.Specialization
+                    })
+                .ToListAsync();
+
+            var dashboardData = new DashboardExportData
+            {
+                ExportDate = DateTime.Now,
+                TotalComplaints = totalComplaints,
+                ResolvedComplaints = resolvedComplaints,
+                PendingComplaints = pendingComplaints,
+                TotalRevenue = totalRevenue,
+                TotalInterventions = totalInterventions,
+                CompletedInterventions = completedInterventions,
+                AverageInterventionCost = avgInterventionCost,
+                TotalInvoices = totalInvoices,
+                PaidInvoices = paidInvoices,
+                OutstandingAmount = outstandingAmount,
+                TechnicianStats = technicianStats
+            };
+
+            var pdfBytes = await _pdfService.GenerateDashboardPdfAsync(dashboardData);
+            var fileName = $"Dashboard-Report-{DateTime.Now:yyyy-MM-dd-HHmmss}.pdf";
+
+            return File(pdfBytes, "application/pdf", fileName);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(500, new { message = "Error generating PDF", error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An unexpected error occurred", error = ex.Message });
+        }
     }
 
     private static string MapComplaintStatus(ComplaintStatus status)

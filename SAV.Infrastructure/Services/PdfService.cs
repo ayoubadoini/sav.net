@@ -1,53 +1,108 @@
-using iText.IO.Font.Constants;
-using iText.Kernel.Font;
-using iText.Kernel.Pdf;
-using iText.Layout;
-using iText.Layout.Element;
+﻿using QuestPDF.Fluent;
+using QuestPDF.Infrastructure;
+using SAV.Application.Interfaces.Services;
 using SAV.Domain.Entities;
 
 namespace SAV.Infrastructure.Services;
 
-public interface IPdfService
-{
-    Task<byte[]> GenerateInvoicePdfAsync(Invoice invoice);
-}
-
 public class PdfService : IPdfService
 {
+    private const string CompanyName = "SAV Manager";
+
+    public PdfService()
+    {
+        QuestPDF.Settings.License = LicenseType.Community;
+    }
+
     public async Task<byte[]> GenerateInvoicePdfAsync(Invoice invoice)
     {
-        await Task.CompletedTask;
-
-        using var ms = new MemoryStream();
-        using var writer = new PdfWriter(ms);
-        using var pdf = new PdfDocument(writer);
-        using var document = new Document(pdf);
-
-        var titleFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
-        document.Add(new Paragraph("INVOICE").SetFont(titleFont).SetFontSize(20));
-        document.Add(new Paragraph($"Invoice Number: {invoice.InvoiceNumber}"));
-        document.Add(new Paragraph($"Date: {invoice.IssueDate:yyyy-MM-dd}"));
-        document.Add(new Paragraph(" "));
-
-        var table = new Table(3);
-        table.AddHeaderCell("Description");
-        table.AddHeaderCell("Unit Price");
-        table.AddHeaderCell("Total");
-
-        foreach (var item in invoice.Items)
+        var document = Document.Create(container =>
         {
-            table.AddCell(item.Description);
-            table.AddCell($"${item.UnitPrice}");
-            table.AddCell($"${item.TotalPrice}");
-        }
+            container.Page(page =>
+            {
+                page.Margin(20);
+                page.Content()
+                    .Column(column =>
+                    {
+                        column.Item().Text(CompanyName).FontSize(24).Bold();
+                        column.Item().Text($"Invoice #{invoice.InvoiceNumber}");
+                        column.Item().Text($"Total: ${invoice.TotalAmount:F2}");
+                    });
+            });
+        });
 
-        document.Add(table);
-        document.Add(new Paragraph(" "));
-        document.Add(new Paragraph($"Subtotal: ${invoice.SubTotal}"));
-        document.Add(new Paragraph($"Tax: ${invoice.TaxAmount}"));
-        document.Add(new Paragraph($"Total: ${invoice.TotalAmount}").SetFont(titleFont).SetFontSize(12));
+        var pdf = document.GeneratePdf();
+        return await Task.FromResult(pdf);
+    }
 
-        document.Flush();
-        return ms.ToArray();
+    public async Task<byte[]> GenerateComplaintPdfAsync(Complaint complaint)
+    {
+        var document = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Margin(20);
+                page.Content()
+                    .Column(column =>
+                    {
+                        column.Item().Text(CompanyName).FontSize(24).Bold();
+                        column.Item().Text($"Complaint #{complaint.Id}");
+                        column.Item().Text($"Title: {complaint.Title}");
+                        column.Item().Text($"Status: {complaint.Status}");
+                        column.Item().Text($"Client: {complaint.Client?.User?.FullName ?? "N/A"}");
+                        column.Item().Text($"Description: {complaint.Description}");
+                        column.Item().Text($"Article: {complaint.Article?.Name ?? "N/A"}");
+                        column.Item().Text($"Interventions: {complaint.Interventions.Count}");
+                    });
+            });
+        });
+
+        var pdf = document.GeneratePdf();
+        return await Task.FromResult(pdf);
+    }
+
+    public async Task<byte[]> GenerateInterventionPdfAsync(TechnicalIntervention intervention)
+    {
+        var document = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Margin(20);
+                page.Content()
+                    .Column(column =>
+                    {
+                        column.Item().Text(CompanyName).FontSize(24).Bold();
+                        column.Item().Text($"Intervention ID: {intervention.Id}");
+                        column.Item().Text($"Status: {intervention.Status}");
+                        column.Item().Text($"Cost: ${intervention.LaborCost:F2}");
+                    });
+            });
+        });
+
+        var pdf = document.GeneratePdf();
+        return await Task.FromResult(pdf);
+    }
+
+    public async Task<byte[]> GenerateDashboardPdfAsync(DashboardExportData dashboardData)
+    {
+        var document = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Margin(20);
+                page.Content()
+                    .Column(column =>
+                    {
+                        column.Item().Text(CompanyName).FontSize(24).Bold();
+                        column.Item().Text("Dashboard Report");
+                        column.Item().Text($"Total Complaints: {dashboardData.TotalComplaints}");
+                        column.Item().Text($"Resolved: {dashboardData.ResolvedComplaints}");
+                        column.Item().Text($"Revenue: ${dashboardData.TotalRevenue:F2}");
+                    });
+            });
+        });
+
+        var pdf = document.GeneratePdf();
+        return await Task.FromResult(pdf);
     }
 }

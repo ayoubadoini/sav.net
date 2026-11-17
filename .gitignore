@@ -11,3 +11,9 @@ dist/
 *.user
 *.suo
 *.userosscache
+/00_COMPLETION_REPORT.txt
+/ADMIN_CARD.txt
+/FINAL_REPORT.txt
+/LOGIN_CREDENTIALS.txt
+/QUICK_REFERENCE.txt
+/SUMMARY.txt

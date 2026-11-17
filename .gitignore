@@ -8,6 +8,8 @@ dist/
 .env.*
 *.log
 *.md
+!README.md
+!**/README.md
 *.user
 *.suo
 *.userosscache
